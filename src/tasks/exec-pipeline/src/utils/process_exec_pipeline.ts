@@ -12,7 +12,7 @@ import * as tl from "azure-pipelines-task-lib";
  * @param token The token to authenticate
  * @param isBearer  Boolean to know if the token is a bearer token
  * @param baseUri   The base URI to execute the pipeline
-* @returns Build or PipelineRun object depending on the execution type (both interfaces are defined in the interface folder)
+ * @returns Build or PipelineRun object depending on the execution type (both interfaces are defined in the interface folder)
  */
 export async function exec_pipeline(
   exec_type: string,
@@ -24,7 +24,7 @@ export async function exec_pipeline(
   is_bearer: boolean,
   url: string
 ): Promise<PipelineRun | Build> {
-  if (exec_type === "run") {
+  if (exec_type === "run" || is_parameter) {
     return await execPipelineRun(
       pipeline_id,
       branch,

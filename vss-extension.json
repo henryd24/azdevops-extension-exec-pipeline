@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "hendamm-exec-pipeline",
   "publisher": "dev-hendamm",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "name": "HenDa DevOps Exec Pipeline",
   "description": "Exec Pipelines in AzDevops",
   "public": false,
@@ -33,7 +33,8 @@
         "url": {
           "displayName": "Server Url",
           "helpText": "Url for the Fluid Server to connect to.",
-          "value": "https://dev.azure.com/"
+          "value": "https://dev.azure.com/",
+          "isVisible": "false"
         },
         "authenticationSchemes": [
           {

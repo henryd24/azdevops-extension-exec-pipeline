@@ -7,7 +7,7 @@
     "postinstall": "cd src/tasks && npm install",
     "build": "cd src/tasks && npm run build",
     "test": "cd src/tasks && npm run test",
-    "pack": "npm run build && tfx extension create --manifest-globs vss-extension.json",
+    "pack": "npm run build && tfx extension create --manifest-globs vss-extension.json && rm -rf tasks",
     "packupversion": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version && rm -rf tasks",
     "test-local": "cd src/tasks && bun run test-local"
   },

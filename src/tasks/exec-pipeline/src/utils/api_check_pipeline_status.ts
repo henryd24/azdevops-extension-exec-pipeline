@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import * as tl from "azure-pipelines-task-lib";
-import { logger } from "./logger";
+
 /**
  * Function to get a pipeline execution
  * @param url URL to get a pipeline execution
@@ -17,7 +17,6 @@ export async function getPipelineExecution(
     Accept: "application/json",
     Authorization: isBearer ? `Bearer ${token}` : `Basic ${token}`,
   };
-  logger.debug(`Fetching pipeline status from ${url}`);
   return await fetch(url, {
     headers,
   }).then((res) => {

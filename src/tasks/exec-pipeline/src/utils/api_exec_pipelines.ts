@@ -2,7 +2,6 @@ import fetch from "node-fetch";
 import { Build } from "../interface/queue";
 import { PipelineRun } from "../interface/run";
 import * as tl from "azure-pipelines-task-lib";
-import { logger } from "./logger";
 
 /**
  * Execute a pipeline by its ID
@@ -25,7 +24,6 @@ export async function execPipelineQueue(
   baseUri: string
 ): Promise<Build> {
   const url = `${baseUri}/_apis/build/builds?api-version=7.2-preview.7`;
-  logger.debug(`Running pipeline with url: ${url}`);
   const headers = {
     "Content-Type": "application/json",
     Authorization: isBearer ? `Bearer ${token}` : `Basic ${token}`,
@@ -38,7 +36,6 @@ export async function execPipelineQueue(
     reason: reason,
     parameters: JSON.stringify(parameters),
   };
-  logger.debug(`Body: ${JSON.stringify(body)}`);
   return await fetch(url, {
     method: "POST",
     headers,
@@ -48,7 +45,7 @@ export async function execPipelineQueue(
       tl.setResult(tl.TaskResult.Failed, res.statusText);
       process.exit(1);
     }
-    logger.info("Pipeline execution started...");
+    console.log("Pipeline execution started...");
     const data: Promise<Build> = res.json();
     return data;
   });
@@ -75,7 +72,6 @@ export async function execPipelineRun(
   baseUri: string
 ) {
   const url = `${baseUri}/_apis/pipelines/${pipelineId}/runs?api-version=7.2-preview.1`;
-  logger.debug(`Running pipeline with url: ${url}`);
   const headers = {
     "Content-Type": "application/json",
     Authorization: isBearer ? `Bearer ${token}` : `Basic ${token}`,
@@ -91,7 +87,6 @@ export async function execPipelineRun(
     templateParameters: isParameter ? parameters : {},
     variables: !isParameter ? parameters : {},
   };
-  logger.debug(`Body: ${JSON.stringify(body)}`);
   return await fetch(url, {
     method: "POST",
     headers,
@@ -101,7 +96,7 @@ export async function execPipelineRun(
       tl.setResult(tl.TaskResult.Failed, res.statusText);
       process.exit(1);
     }
-    logger.info("Pipeline execution started...");
+    console.log("Pipeline execution started...");
     const data: Promise<PipelineRun> = res.json();
     return data;
   });

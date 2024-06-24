@@ -1,6 +1,6 @@
-import * as tl from "azure-pipelines-task-lib/task";
+import * as tl from "azure-pipelines-task-lib";
 import { getPipelineExecution } from "./api_check_pipeline_status";
-import { logger } from "./logger";
+
 /**
  * Get the pipeline status
  * @param url_exec The URL to get the pipeline status
@@ -22,33 +22,33 @@ export async function processCheckPipelineStatus(
       );
 
       const pipelineStatus = response["status"] ?? response["state"];
-      logger.info(`Pipeline status: ${pipelineStatus}`);
+      console.log(`Pipeline status: ${pipelineStatus}`);
       if (pipelineStatus === "inProgress") {
         return;
       }
       const pipelineResult = response["result"];
 
       if (pipelineResult === "succeeded") {
-        logger.info("Pipeline completed successfully!!!");
+        console.log("Pipeline completed successfully!!!");
         tl.setResult(
           tl.TaskResult.Succeeded,
           "Pipeline completed successfully!!!"
         );
         clearInterval(intervalId);
       } else if (pipelineResult === "partiallySucceeded") {
-        logger.info("Pipeline partially succeeded!!!");
+        console.log("Pipeline partially succeeded!!!");
         tl.setResult(
           tl.TaskResult.SucceededWithIssues,
           "Pipeline partially succeeded!!!"
         );
         clearInterval(intervalId);
       } else if (pipelineResult === "canceled" || pipelineResult === "failed") {
-        logger.error(`Pipeline ${pipelineResult}...`);
+        console.error(`Pipeline ${pipelineResult}...`);
         tl.setResult(tl.TaskResult.Failed, `Pipeline ${pipelineResult}...`);
         clearInterval(intervalId);
       }
     } catch (error) {
-      logger.error(`Error fetching pipeline status: ${error}`);
+      console.error(`Error fetching pipeline status: ${error}`);
       clearInterval(intervalId);
       tl.setResult(tl.TaskResult.Failed, error);
       process.exit(1);

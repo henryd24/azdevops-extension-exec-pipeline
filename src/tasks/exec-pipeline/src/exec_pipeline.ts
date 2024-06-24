@@ -4,7 +4,6 @@ import { Build } from "./interface/queue";
 import { exec_pipeline } from "./utils/process_exec_pipeline";
 import { processParameters } from "./utils/process_parameters";
 import { processCheckPipelineStatus } from "./utils/process_check_pipeline_status";
-import { logger } from "./utils/logger";
 
 /**
  * Runs the Exec Pipeline Task.
@@ -49,8 +48,6 @@ async function run() {
     url = `${teamFundationUri}${teamProject}`;
     token = tl.getVariable("System.AccessToken")!;
     isBearer = true;
-    logger.debug(`URL (Org/Project): ${url}`);
-    logger.debug(`Bearer (true or false): ${isBearer}`);
   }
 
   const branch = tl.getInput("branch", true)!;
@@ -60,7 +57,6 @@ async function run() {
   const isParameter = tl.getInput("isParameter", false) === "true";
   const onlyExecution = tl.getInput("onlyExecution", false) === "true";
   const dataContainer = processParameters(parameters, isParameter, execType);
-  logger.info(JSON.stringify(dataContainer));
 
   returnedData = await exec_pipeline(
     execType,
@@ -72,7 +68,7 @@ async function run() {
     isBearer,
     url
   );
-  logger.info(`Pipeline URL: ${returnedData._links.web.href}`);
+  console.log(`Pipeline URL: ${returnedData._links.web.href}`);
   if (!onlyExecution) {
     processCheckPipelineStatus(returnedData.url, token, isBearer);
   }

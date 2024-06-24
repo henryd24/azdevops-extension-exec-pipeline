@@ -6,7 +6,7 @@
       "target": "ES6",
       "removeComments": true,
       "rootDir": "./",
-      "outDir": "../../../tasks/jfrog-creation/",
+      "outDir": "../../../tasks/exec-pipeline/",
       "types": ["jest"]
     },
     "include": ["./task.json","./node_modules"],

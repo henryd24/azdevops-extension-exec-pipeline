@@ -1,5 +1,4 @@
 import * as tl from "azure-pipelines-task-lib";
-import { logger } from "./logger";
 
 /**
  * Process the parameters to be used in the pipeline
@@ -30,7 +29,6 @@ export function processParameters(
           }
         }
         dataContainer = transformed;
-        logger.debug(`Data: ${JSON.stringify(dataContainer)}`);
       }
     } catch (e) {
       console.error(

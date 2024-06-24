@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "module": "CommonJS",
+      "moduleResolution": "Node",
+      "esModuleInterop": true,
+      "target": "ES6",
+      "removeComments": true,
+      "rootDir": "./",
+      "outDir": "../../../tasks/jfrog-creation/",
+      "types": ["jest"]
+    },
+    "include": ["./task.json","./node_modules"],
+    "exclude": ["node_modules","**/tests/**"]
+  }
+  

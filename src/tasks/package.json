@@ -1,0 +1,13 @@
+{
+  "name": "tasks",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "postinstall": "cd exec-pipeline && npm install",
+    "exec-pipeline": "cd exec-pipeline && npm run build",
+    "test-exec-pipeline": "cd exec-pipeline && npm run coverage",
+    "build": "npm run exec-pipeline",
+    "test": "npm run test-exec-pipeline",
+    "test-local": "cd exec-pipeline && bun run test-local"
+  }
+}

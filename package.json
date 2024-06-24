@@ -1,0 +1,21 @@
+{
+  "name": "henda_devops_creations",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "cd src/tasks && npm install",
+    "build": "cd src/tasks && npm run build",
+    "test": "cd src/tasks && npm run test",
+    "pack": "npm run build && tfx extension create --manifest-globs vss-extension.json",
+    "packupversion": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version && rm -rf tasks",
+    "test-local": "cd src/tasks && bun run test-local"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tfx-cli": "^0.16.0",
+    "typescript": "^5.2.2"
+  }
+}

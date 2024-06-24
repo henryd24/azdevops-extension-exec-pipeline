@@ -1,0 +1,30 @@
+{
+  "name": "tasks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "testdev": "jest --watch",
+    "coverage": "jest --coverage",
+    "build": "tsc -p tsconfig.build.json; cp -r task.json icon.png node_modules ../../../tasks/exec-pipeline",
+    "test-local": "export $(grep -v '^#' .env | xargs -0); bun src/exec_pipeline.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^18.15.5",
+    "azure-pipelines-task-lib": "^4.3.1",
+    "bunyan": "^1.8.15",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node-fetch": "^2.6.11",
+    "jest": "^29.7.0",
+    "jest-fetch-mock": "^3.0.3",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.3"
+  }
+}

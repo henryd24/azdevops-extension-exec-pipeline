@@ -1,0 +1,109 @@
+{
+  "id": "d21965fd-f162-4110-9e20-899a54aca06c",
+  "name": "hendamm-exec-pipeline-task",
+  "friendlyName": "HenDa Exec Pipeline",
+  "description": "Extension to exec pipeline in azure devops",
+  "helpMarkDown": "Extension to exec pipeline in azure devops",
+  "category": "Utility",
+  "author": "HenDa Chapter DevSecOps",
+  "version": {
+    "Major": 0,
+    "Minor": 0,
+    "Patch": 8
+  },
+  "visibility": ["Build", "Release"],
+  "instanceNameFormat": "HenDa Exec Pipeline",
+  "inputs": [
+    {
+      "name": "useSVC",
+      "type": "boolean",
+      "label": "Use Service Connection",
+      "defaultValue": "false",
+      "required": true
+    },
+    {
+      "name": "azureDevopsPath",
+      "type": "connectedService:execPipelineService",
+      "label": "Azure Devops Path",
+      "visibleRule": "useSVC = true",
+      "required": false,
+      "helpMarkDown": "Select the service connection for azure devops (if you want to use it)."
+    },
+    {
+      "name": "branch",
+      "type": "string",
+      "label": "Branch",
+      "helpMarkDown": "The branch to execute the pipeline.",
+      "defaultValue": "main",
+      "required": true
+    },
+    {
+      "name": "pipelineID",
+      "type": "string",
+      "label": "Pipeline ID",
+      "helpMarkDown": "The ID of the pipeline to execute (you can find it in the URL).",
+      "required": true
+    },
+    {
+      "name": "execType",
+      "type": "pickList",
+      "label": "Execution Type",
+      "helpMarkDown": "Select the type of execution.",
+      "defaultValue": "run",
+      "required": true,
+      "options": {
+        "run": "Run (Run API)",
+        "queue": "Queue (Build API)"
+      }
+    },
+    {
+      "name": "reason",
+      "type": "pickList",
+      "label": "Reason for execution",
+      "helpMarkDown": "Select the reason for the execution.",
+      "visibleRule": "execType = queue",
+      "defaultValue": "userCreated",
+      "required": false,
+      "options": {
+        "manual": "Manual",
+        "userCreated": "UserCreated",
+        "individualCI": "IndividualCI",
+        "buildCompletion": "BuildCompletion",
+        "triggered": "Triggered",
+        "resourceTrigger": "ResourceTrigger",
+        "batchedCI": "BatchedCI",
+        "schedule": "Schedule",
+        "validateShelveset": "ValidateShelveset",
+        "checkInShelveset": "CheckInShelveset"
+      }
+    },
+    {
+      "name": "isParameter",
+      "type": "boolean",
+      "label": "Extra Data is Parameter",
+      "helpMarkDown": "If checked, the extra data will be passed as parameters to the pipeline instead of variables.",
+      "visibleRule": "execType = run",
+      "defaultValue": "false"
+    },
+    {
+      "name": "parameters",
+      "type": "string",
+      "label": "Parameters or Variables to pass to the pipeline (JSON)",
+      "helpMarkDown": "If you want to pass parameters or variables to the pipeline, you can use this field. The format is JSON (e.g. {\"key\": \"value\"}).",
+      "required": false,
+      "defaultValue": "{}"
+    },
+    {
+      "name": "onlyExecution",
+      "type": "boolean",
+      "label": "Just execute the pipeline",
+      "helpMarkDown": "If checked, the pipeline will be executed without waiting for the result.",
+      "defaultValue": "true"
+    }
+  ],
+  "execution": {
+    "Node": {
+      "target": "src/exec_pipeline.js"
+    }
+  }
+}

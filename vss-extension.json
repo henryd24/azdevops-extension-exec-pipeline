@@ -1,8 +1,8 @@
 {
   "manifestVersion": 1,
-  "id": "hendamm-exec-pipeline",
-  "publisher": "dev-hendamm",
-  "version": "0.0.13",
+  "id": "execute-pipeline",
+  "publisher": "hendamm",
+  "version": "0.0.14",
   "name": "HenDa DevOps Exec Pipeline",
   "description": "Exec Pipelines in AzDevops",
   "public": false,
@@ -14,7 +14,7 @@
   ],
   "contributions": [
     {
-      "id": "hendamm-exec-pipeline",
+      "id": "execute-pipeline-task",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {

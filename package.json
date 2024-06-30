@@ -4,18 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "cd src/tasks && npm install",
-    "build": "cd src/tasks && npm run build",
-    "test": "cd src/tasks && npm run test",
-    "pack": "npm run build && tfx extension create --manifest-globs vss-extension.json && rm -rf tasks",
-    "packupversion": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version && rm -rf tasks",
-    "test-local": "cd src/tasks && bun run test-local"
+    "postinstall": "azde-scripts install src/tasks",
+    "build": "azde-scripts build src/tasks",
+    "pack": "azde-scripts build src/tasks && azde-scripts package src/tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/release.json",
+    "packupversion": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
+    "pack:dev": "azde-scripts build src/tasks && azde-scripts package src/tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/dev.json",
+    "packupversion:dev": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/dev.json",
+    "clean:tasks": "rm -rf tasks",
+    "rimraf": "rimraf"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "tfx-cli": "^0.16.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "azde-scripts": "^1.0.0",
+    "rimraf": "^3.0.2"
   }
 }

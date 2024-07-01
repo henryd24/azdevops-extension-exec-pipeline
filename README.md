@@ -1,6 +1,6 @@
-# desecvops_jfrog-creation_extension
+# desecvops extension to execute pipelines in azure devops
 
-Descripción breve del proyecto.
+Esta extensión permite ejecutar pipelines de Azure DevOps desde otro pipeline, y permite esperar a que el pipeline ejecutado termine.
 
 ## Instalación
 
@@ -8,14 +8,6 @@ Para instalar las dependencias del proyecto, ejecuta el siguiente comando:
 
 ```bash
 npm install
-```
-
-## Pruebas
-
-Para ejecutar las pruebas, usa el siguiente comando:
-
-```bash
-npm test
 ```
 
 ## Construir
@@ -35,7 +27,3 @@ npm run pack
 # Subir version y empaquetar
 npm run packupversion
 ```
-
-## Contribuir
-
-Si deseas contribuir al proyecto, por favor revisa el archivo [CODEOWNERS](.github/CODEOWNERS) para ver quién es el propietario del código y ponte en contacto con ellos.

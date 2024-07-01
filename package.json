@@ -7,11 +7,10 @@
     "postinstall": "azde-scripts install src/tasks",
     "build": "azde-scripts build src/tasks",
     "pack": "azde-scripts build src/tasks && azde-scripts package src/tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/release.json",
-    "packupversion": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
+    "packupversion": "azde-scripts build src/tasks && azde-scripts package && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
     "pack:dev": "azde-scripts build src/tasks && azde-scripts package src/tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/dev.json",
     "packupversion:dev": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/dev.json",
-    "clean:tasks": "rm -rf tasks",
-    "rimraf": "rimraf"
+    "clean:tasks": "rm -rf tasks"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +18,6 @@
   "dependencies": {
     "tfx-cli": "^0.16.0",
     "typescript": "^5.2.2",
-    "azde-scripts": "^1.0.0",
-    "rimraf": "^3.0.2"
+    "azde-scripts": "^1.0.0"
   }
 }

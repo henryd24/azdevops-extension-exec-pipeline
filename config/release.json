@@ -1,5 +1,6 @@
 {
   "id": "execute-pipeline",
   "public": true,
-  "publisher": "hendamm"
+  "publisher": "hendamm",
+  "version": "0.0.1"
 }

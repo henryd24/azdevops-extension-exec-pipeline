@@ -1,12 +1,24 @@
 {
   "manifestVersion": 1,
-  "id": "execute-pipeline",
+  "id": "hendamm-execute-pipeline",
   "publisher": "hendamm",
   "version": "0.0.14",
-  "name": "HenDa DevOps Exec Pipeline",
+  "name": "Execute Pipeline",
   "description": "Exec Pipelines in AzDevops",
   "public": false,
   "categories": ["Azure Pipelines"],
+  "content": {
+    "details": {
+      "path": "README.md"
+    },
+    "license": {
+      "path": "LICENSE"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/henryd24/azdevops-extension-exec-pipeline"
+  },
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services.Cloud"
@@ -28,8 +40,8 @@
       "targets": ["ms.vss-endpoint.endpoint-types"],
       "properties": {
         "name": "execPipelineService",
-        "displayName": "Azure Devops Path",
-        "icon": "images/extension-icon.png",
+        "displayName": "Azure Devops Path (Exec Pipeline)",
+        "icon": "images/path.png",
         "url": {
           "displayName": "Server Url",
           "helpText": "Url for the Fluid Server to connect to.",
@@ -85,6 +97,10 @@
   "files": [
     {
       "path": "tasks"
+    },
+    {
+      "path": "images",
+      "addressable": true
     }
   ],
 

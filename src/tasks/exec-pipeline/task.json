@@ -1,18 +1,18 @@
 {
   "id": "d21965fd-f162-4110-9e20-899a54aca06c",
   "name": "hendamm-exec-pipeline-task",
-  "friendlyName": "HenDa Exec Pipeline",
+  "friendlyName": "Exec Pipeline",
   "description": "Extension to exec pipeline in azure devops",
   "helpMarkDown": "Extension to exec pipeline in azure devops",
   "category": "Utility",
-  "author": "HenDa Chapter DevSecOps",
+  "author": "Henry Mosquera",
   "version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 12
+    "Patch": 1
   },
   "visibility": ["Build", "Release"],
-  "instanceNameFormat": "HenDa Exec Pipeline",
+  "instanceNameFormat": "Exec Pipeline",
   "inputs": [
     {
       "name": "useSVC",

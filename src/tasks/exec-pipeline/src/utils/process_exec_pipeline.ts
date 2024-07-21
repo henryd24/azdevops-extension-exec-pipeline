@@ -24,7 +24,7 @@ export async function exec_pipeline(
   is_bearer: boolean,
   url: string
 ): Promise<PipelineRun | Build> {
-  if (exec_type === "run" || is_parameter) {
+  if (exec_type === "run") {
     return await execPipelineRun(
       pipeline_id,
       branch,

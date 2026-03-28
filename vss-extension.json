@@ -1,8 +1,6 @@
 {
   "manifestVersion": 1,
   "id": "hendamm-execute-pipeline",
-  "publisher": "hendamm",
-  "version": "0.0.14",
   "name": "Execute Pipeline",
   "description": "Exec Pipelines in AzDevops",
   "public": false,

@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { Build } from "../interface/queue";
 import { PipelineRun } from "../interface/run";
 import * as tl from "azure-pipelines-task-lib";
@@ -19,6 +18,7 @@ export async function execPipelineQueue(
   branch: string,
   reason: string,
   parameters: Record<string, any>,
+  isParameter: boolean,
   token: string,
   isBearer: boolean,
   baseUri: string
@@ -34,20 +34,27 @@ export async function execPipelineQueue(
     },
     sourceBranch: `refs/heads/${branch}`,
     reason: reason,
-    parameters: JSON.stringify(parameters),
+    ...(isParameter ? { templateParameters: parameters } : { variables: parameters }),
   };
+  tl.debug(`Request URL: ${url}`);
+  tl.debug(`Request Body: ${JSON.stringify(body)}`);
   return await fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
   }).then((res) => {
     if (res.status !== 200) {
-      tl.setResult(tl.TaskResult.Failed, res.statusText);
-      process.exit(1);
+      tl.error(`Validate if the inputs parameters are correct (pipeline ID, branch, etc) and if the pipeline has the correct permissions to be executed.`);
+      throw new Error(`Pipeline execution failed with status ${res.status}: ${res.statusText}`);
     }
     console.log("Pipeline execution started...");
     const data: Promise<Build> = res.json();
     return data;
+  })
+  .catch((err) => {
+    err["status"] = "Failed";
+    tl.setResult(tl.TaskResult.Failed, err);
+    return err;
   });
 }
 
@@ -84,20 +91,27 @@ export async function execPipelineRun(
         },
       },
     },
-    templateParameters: isParameter ? parameters : {},
-    variables: !isParameter ? parameters : {},
+    ...(isParameter ? { templateParameters: parameters } : { variables: parameters }),
   };
+  tl.debug(`Request URL: ${url}`);
+  tl.debug(`Request Body: ${JSON.stringify(body)}`);
   return await fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
   }).then((res) => {
     if (res.status !== 200) {
+      tl.error(`Validate if the inputs parameters are correct (pipeline ID, branch, etc) and if the pipeline has the correct permissions to be executed.`);
       tl.setResult(tl.TaskResult.Failed, res.statusText);
-      process.exit(1);
+      throw new Error(`Pipeline execution failed with status ${res.status}: ${res.statusText}`);
     }
     console.log("Pipeline execution started...");
     const data: Promise<PipelineRun> = res.json();
     return data;
+  })
+  .catch((err) => {
+    err["status"] = "Failed";
+    tl.setResult(tl.TaskResult.Failed, err);
+    return err;
   });
 }

@@ -49,9 +49,8 @@ export async function processCheckPipelineStatus(
       }
     } catch (error) {
       console.error(`Error fetching pipeline status: ${error}`);
-      clearInterval(intervalId);
       tl.setResult(tl.TaskResult.Failed, error);
-      process.exit(1);
+      clearInterval(intervalId);
     }
   }, intervalTime);
 }

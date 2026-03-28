@@ -9,7 +9,6 @@
       "outDir": "../../../tasks/exec-pipeline/",
       "types": ["jest"]
     },
-    "include": ["./task.json","./node_modules"],
-    "exclude": ["node_modules","**/tests/**"]
+    "exclude": ["node_modules"]
   }
   

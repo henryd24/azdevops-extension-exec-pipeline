@@ -19,7 +19,6 @@ export function processParameters(
       dataContainer = JSON.parse(parameters);
       if (
         !isParameter &&
-        execType === "run" &&
         Object.keys(dataContainer).length !== 0
       ) {
         let transformed = {};

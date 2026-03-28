@@ -41,6 +41,7 @@ export async function exec_pipeline(
       branch,
       reason,
       parameters,
+      is_parameter,
       token,
       is_bearer,
       url

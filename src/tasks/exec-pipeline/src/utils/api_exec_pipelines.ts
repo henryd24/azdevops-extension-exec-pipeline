@@ -34,7 +34,7 @@ export async function execPipelineQueue(
     },
     sourceBranch: `refs/heads/${branch}`,
     reason: reason,
-    ...(isParameter ? { templateParameters: parameters } : { variables: parameters }),
+    ...(isParameter ? { templateParameters: parameters } : { parameters: JSON.stringify(parameters) }),
   };
   tl.debug(`Request URL: ${url}`);
   tl.debug(`Request Body: ${JSON.stringify(body)}`);

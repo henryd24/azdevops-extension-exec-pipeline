@@ -68,6 +68,12 @@ async function run() {
     isBearer,
     url
   );
+  
+  if (!returnedData || returnedData["status"] === "Failed") {
+    tl.setResult(tl.TaskResult.Failed, "Pipeline execution failed. Check logs for more details.");
+    return;
+  }
+
   console.log(`Pipeline URL: ${returnedData._links.web.href}`);
   if (!onlyExecution) {
     processCheckPipelineStatus(returnedData.url, token, isBearer);

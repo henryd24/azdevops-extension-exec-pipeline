@@ -9,7 +9,7 @@
   "version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 2
+    "Patch": 3
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Exec Pipeline",
@@ -82,7 +82,6 @@
       "type": "boolean",
       "label": "Extra Data is Parameter",
       "helpMarkDown": "If checked, the extra data will be passed as parameters to the pipeline instead of variables.",
-      "visibleRule": "execType = run",
       "defaultValue": "false"
     },
     {
@@ -102,8 +101,12 @@
     }
   ],
   "execution": {
-    "Node16": {
-      "target": "src/exec_pipeline.js"
-    }
-  }
+      "Node20_1": {
+          "target": "index.js"
+      },
+      "Node24": {
+          "target": "index.js"
+      }
+  },
+  "minimumAgentVersion": "4.248.0"
 }

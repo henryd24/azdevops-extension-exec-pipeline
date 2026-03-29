@@ -6,18 +6,19 @@
   "scripts": {
     "postinstall": "azde-scripts install src/tasks",
     "build": "azde-scripts build src/tasks",
-    "pack": "azde-scripts build src/tasks && azde-scripts package src/tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/release.json",
-    "packupversion": "azde-scripts build src/tasks && azde-scripts package && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
-    "pack:dev": "azde-scripts build src/tasks && azde-scripts package src/tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/dev.json",
-    "packupversion:dev": "npm run build && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/dev.json",
+    "package:tasks": "cd src/tasks/exec-pipeline && npm run package",
+    "pack": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/release.json",
+    "packupversion": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
+    "pack:dev": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/dev.json",
+    "packupversion:dev": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/dev.json",
     "clean:tasks": "rm -rf tasks"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "tfx-cli": "^0.16.0",
-    "typescript": "^5.2.2",
-    "azde-scripts": "^1.0.0"
+    "azde-scripts": "^1.0.0",
+    "tfx-cli": "^0.23.1",
+    "typescript": "^5.7.2"
   }
 }

@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import * as tl from "azure-pipelines-task-lib";
 
 /**

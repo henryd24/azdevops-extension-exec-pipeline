@@ -21,6 +21,39 @@ Search for the task called "Exec Pipeline" and the inputs are as follows:
 8. **Parameters or Variables** (optional): Additional information to be sent to the pipeline to be executed. It is sent in JSON format, for example: {"key1": "value1", "key2": "value2"}.
 9. **Just execute** (optional): Indicates if you will wait for the executed pipeline to finish. If "true" (selected), it will wait; if "false", it will not wait.
 
+10. **Polling interval (seconds)** (optional): Seconds between status checks while waiting (5-300). Default `10`.
+11. **Wait timeout (minutes)** (optional): Maximum time to wait for the executed pipeline. `0` (default) means no limit. On timeout the task fails, but the executed pipeline keeps running (unless "Cancel executed pipeline" is enabled).
+12. **Pipeline Name** (optional): Alternative to *Pipeline ID*. If several pipelines share a name, prefix it with the folder (`folder\name`). If both are set, the ID is used.
+13. **Parameters file (JSON)** (optional): Path (relative to the working directory) to a JSON file with an object of parameters/variables. The file is read as standard JSON; values in the inline field override the file. To use a pipeline variable instead, write `$(myVariable)` in the inline field.
+14. **Target Organization / Target Project** (optional): Run a pipeline that lives in another project or organization. See below.
+15. **Personal Access Token** (optional, only without a service connection): PAT used for another organization. Pass a secret variable, e.g. `$(myPat)`.
+16. **Cancel executed pipeline on cancel/timeout** (optional): While waiting, cancel the executed pipeline if this task is canceled or the wait timeout is reached.
+
+The **Branch** input accepts either a branch name (`main`) or a full ref (`refs/heads/main`, `refs/tags/v1`).
+
+# Other projects and organizations
+
+| Scenario                                  | What to configure                                                                                                                        |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Same project                              | Nothing (default).                                                                                                                       |
+| Another project, same organization        | `targetProject`. With `System.AccessToken` the project's *Build Service* identity must have access to the target project and pipeline.  |
+| Another organization (no service connection) | `targetOrganization` + `targetProject` + `personalAccessToken` (PAT with *Build: Read & execute*).                                     |
+| Another organization (service connection) | Use a service connection that stores the destination organization/project/PAT. `targetProject` can still override the project.        |
+
+# Output variables
+
+Give the step a `name` to read these from later steps as `$(<name>.<variable>)`:
+
+| Variable    | Description                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| `runId`     | ID of the executed run/build                                                                 |
+| `runUrl`    | Web URL of the executed run/build                                                            |
+| `runResult` | `succeeded`, `partiallySucceeded`, `failed`, `canceled` or `timeout` (only when waiting)    |
+
+Error messages include the reason reported by Azure DevOps and a hint (authentication, permissions, not found...). Parameter and variable *names* are logged, never their values.
+
+Transient errors (network, HTTP 429/5xx) while waiting are retried up to 3 times before the task fails.
+
 # Usage Example
 
 ```yaml
@@ -32,6 +65,25 @@ Search for the task called "Exec Pipeline" and the inputs are as follows:
     execType: "queue"
     reason: "individualCI"
     parameters: '{"key1": "value1", "key2": "value2"}'
+```
+
+Another project, by pipeline name, with a parameters file and waiting up to 30 minutes:
+
+```yaml
+- task: hendamm-exec-pipeline-task@0
+  name: deploy
+  inputs:
+    useSVC: false
+    targetProject: "Platform"
+    pipelineName: "infra\\deploy"
+    branch: "main"
+    execType: "run"
+    isParameter: true
+    parametersFile: "config/deploy-params.json"
+    onlyExecution: false
+    timeoutMinutes: 30
+    cancelOnAbort: true
+- script: echo "Result $(deploy.runResult) - $(deploy.runUrl)"
 ```
 
 # Installation

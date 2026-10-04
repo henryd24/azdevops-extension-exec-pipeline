@@ -1,6 +1,22 @@
 import { Build } from "../interface/queue";
 import { PipelineRun } from "../interface/run";
 import * as tl from "azure-pipelines-task-lib";
+import { normalizeBranch } from "./process_options";
+import { apiRequest, HttpError } from "./api_client";
+
+/** Log a readable error and mark the task as failed; returns the error flagged as Failed */
+function handleFailure(err: any) {
+  const message = err instanceof Error ? err.message : `${err}`;
+  tl.error(`Pipeline execution could not be started. ${message}`);
+  const hint = err instanceof HttpError ? err.hint : "";
+  if (hint) {
+    tl.error(hint);
+  }
+  tl.setResult(tl.TaskResult.Failed, "Pipeline execution could not be started (see the errors above).");
+  const failed = err instanceof Error ? err : new Error(message);
+  failed["status"] = "Failed";
+  return failed;
+}
 
 /**
  * Execute a pipeline by its ID
@@ -24,38 +40,23 @@ export async function execPipelineQueue(
   baseUri: string
 ): Promise<Build> {
   const url = `${baseUri}/_apis/build/builds?api-version=7.2-preview.7`;
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: isBearer ? `Bearer ${token}` : `Basic ${token}`,
-  };
   const body = {
     definition: {
       id: pipelineId,
     },
-    sourceBranch: `refs/heads/${branch}`,
+    sourceBranch: normalizeBranch(branch),
     reason: reason,
     ...(isParameter ? { templateParameters: parameters } : { parameters: JSON.stringify(parameters) }),
   };
   tl.debug(`Request URL: ${url}`);
   tl.debug(`Request Body: ${JSON.stringify(body)}`);
-  return await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  }).then((res) => {
-    if (res.status !== 200) {
-      tl.error(`Validate if the inputs parameters are correct (pipeline ID, branch, etc) and if the pipeline has the correct permissions to be executed.`);
-      throw new Error(`Pipeline execution failed with status ${res.status}: ${res.statusText}`);
-    }
+  try {
+    const data = await apiRequest<Build>(url, token, isBearer, { method: "POST", body });
     console.log("Pipeline execution started...");
-    const data: Promise<Build> = res.json();
     return data;
-  })
-  .catch((err) => {
-    err["status"] = "Failed";
-    tl.setResult(tl.TaskResult.Failed, err);
-    return err;
-  });
+  } catch (err) {
+    return handleFailure(err) as any;
+  }
 }
 
 /**
@@ -79,15 +80,11 @@ export async function execPipelineRun(
   baseUri: string
 ) {
   const url = `${baseUri}/_apis/pipelines/${pipelineId}/runs?api-version=7.2-preview.1`;
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: isBearer ? `Bearer ${token}` : `Basic ${token}`,
-  };
   const body = {
     resources: {
       repositories: {
         self: {
-          refName: `refs/heads/${branch}`,
+          refName: normalizeBranch(branch),
         },
       },
     },
@@ -95,23 +92,11 @@ export async function execPipelineRun(
   };
   tl.debug(`Request URL: ${url}`);
   tl.debug(`Request Body: ${JSON.stringify(body)}`);
-  return await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  }).then((res) => {
-    if (res.status !== 200) {
-      tl.error(`Validate if the inputs parameters are correct (pipeline ID, branch, etc) and if the pipeline has the correct permissions to be executed.`);
-      tl.setResult(tl.TaskResult.Failed, res.statusText);
-      throw new Error(`Pipeline execution failed with status ${res.status}: ${res.statusText}`);
-    }
+  try {
+    const data = await apiRequest<PipelineRun>(url, token, isBearer, { method: "POST", body });
     console.log("Pipeline execution started...");
-    const data: Promise<PipelineRun> = res.json();
     return data;
-  })
-  .catch((err) => {
-    err["status"] = "Failed";
-    tl.setResult(tl.TaskResult.Failed, err);
-    return err;
-  });
+  } catch (err) {
+    return handleFailure(err) as any;
+  }
 }

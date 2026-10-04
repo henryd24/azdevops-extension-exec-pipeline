@@ -1,4 +1,6 @@
-import * as tl from "azure-pipelines-task-lib";
+import { apiRequest } from "./api_client";
+
+export { HttpError } from "./api_client";
 
 /**
  * Function to get a pipeline execution
@@ -6,23 +8,12 @@ import * as tl from "azure-pipelines-task-lib";
  * @param token Token to authenticate
  * @param isBearer Boolean to know if the token is a bearer token
  * @returns Pipeline execution object (Json)
+ * @throws HttpError when the response status is not 200
  */
 export async function getPipelineExecution(
   url: string,
   token: string,
   isBearer: boolean
 ): Promise<Record<string, any>> {
-  const headers = {
-    Accept: "application/json",
-    Authorization: isBearer ? `Bearer ${token}` : `Basic ${token}`,
-  };
-  return await fetch(url, {
-    headers,
-  }).then((res) => {
-    if (res.status !== 200) {
-      tl.setResult(tl.TaskResult.Failed, res.statusText);
-      process.exit(1);
-    }
-    return res.json();
-  });
+  return apiRequest(url, token, isBearer);
 }

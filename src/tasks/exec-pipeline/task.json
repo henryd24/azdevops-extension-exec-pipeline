@@ -8,10 +8,13 @@
   "author": "Henry Mosquera",
   "version": {
     "Major": 0,
-    "Minor": 0,
-    "Patch": 3
+    "Minor": 2,
+    "Patch": 0
   },
-  "visibility": ["Build", "Release"],
+  "visibility": [
+    "Build",
+    "Release"
+  ],
   "instanceNameFormat": "Exec Pipeline",
   "inputs": [
     {
@@ -30,6 +33,28 @@
       "helpMarkDown": "Select the service connection for azure devops (if you want to use it)."
     },
     {
+      "name": "targetOrganization",
+      "type": "string",
+      "label": "Target Organization (optional)",
+      "helpMarkDown": "Organization that owns the pipeline. Defaults to the current one (or the one in the service connection). A different organization requires a service connection or a Personal Access Token.",
+      "required": false
+    },
+    {
+      "name": "targetProject",
+      "type": "string",
+      "label": "Target Project (optional)",
+      "helpMarkDown": "Project that owns the pipeline. Defaults to the current project (or the one in the service connection). With System.AccessToken, the Build Service identity needs access to that project.",
+      "required": false
+    },
+    {
+      "name": "personalAccessToken",
+      "type": "string",
+      "label": "Personal Access Token (optional)",
+      "helpMarkDown": "Only without a service connection, to execute pipelines in another organization. Pass a secret variable, e.g. $(myPat). Needs Build (Read & execute).",
+      "required": false,
+      "visibleRule": "useSVC = false"
+    },
+    {
       "name": "branch",
       "type": "string",
       "label": "Branch",
@@ -41,8 +66,15 @@
       "name": "pipelineID",
       "type": "string",
       "label": "Pipeline ID",
-      "helpMarkDown": "The ID of the pipeline to execute (you can find it in the URL).",
-      "required": true
+      "helpMarkDown": "The ID of the pipeline to execute (you can find it in the URL). Required unless Pipeline Name is set; if both are set the ID is used.",
+      "required": false
+    },
+    {
+      "name": "pipelineName",
+      "type": "string",
+      "label": "Pipeline Name",
+      "helpMarkDown": "Alternative to Pipeline ID. Name of the pipeline; if several pipelines share the name, prefix it with the folder (folder\\name).",
+      "required": false
     },
     {
       "name": "execType",
@@ -93,20 +125,68 @@
       "defaultValue": "{}"
     },
     {
+      "name": "parametersFile",
+      "type": "string",
+      "label": "Parameters file (JSON)",
+      "helpMarkDown": "Path to a JSON file (object) with parameters/variables, relative to the working directory. Values in the inline field override the file.",
+      "required": false
+    },
+    {
       "name": "onlyExecution",
       "type": "boolean",
       "label": "Just execute the pipeline",
       "helpMarkDown": "If checked, the pipeline will be executed without waiting for the result.",
       "defaultValue": "true"
+    },
+    {
+      "name": "pollIntervalSeconds",
+      "type": "string",
+      "label": "Polling interval (seconds)",
+      "helpMarkDown": "Seconds between status checks while waiting for the pipeline (5-300). Default 10.",
+      "defaultValue": "10",
+      "required": false,
+      "visibleRule": "onlyExecution = false"
+    },
+    {
+      "name": "timeoutMinutes",
+      "type": "string",
+      "label": "Wait timeout (minutes)",
+      "helpMarkDown": "Maximum minutes to wait for the executed pipeline. 0 means no limit (default). On timeout this task fails but the executed pipeline keeps running.",
+      "defaultValue": "0",
+      "required": false,
+      "visibleRule": "onlyExecution = false"
+    },
+    {
+      "name": "cancelOnAbort",
+      "type": "boolean",
+      "label": "Cancel executed pipeline on cancel/timeout",
+      "helpMarkDown": "When waiting, cancel the executed pipeline if this task is canceled or the wait timeout is reached.",
+      "defaultValue": "false",
+      "required": false,
+      "visibleRule": "onlyExecution = false"
     }
   ],
   "execution": {
-      "Node20_1": {
-          "target": "index.js"
-      },
-      "Node24": {
-          "target": "index.js"
-      }
+    "Node20_1": {
+      "target": "index.js"
+    },
+    "Node24": {
+      "target": "index.js"
+    }
   },
-  "minimumAgentVersion": "4.248.0"
+  "minimumAgentVersion": "4.248.0",
+  "outputVariables": [
+    {
+      "name": "runId",
+      "description": "ID of the executed run/build"
+    },
+    {
+      "name": "runUrl",
+      "description": "Web URL of the executed run/build"
+    },
+    {
+      "name": "runResult",
+      "description": "Final result (succeeded, partiallySucceeded, failed, canceled, timeout). Only set when waiting for the pipeline"
+    }
+  ]
 }

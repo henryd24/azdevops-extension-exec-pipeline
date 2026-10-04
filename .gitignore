@@ -154,7 +154,7 @@ dist
 **/.env
 **/*.vsix
 **/*.zip
-tasks/
+/tasks/
 
 
 **DS_Store

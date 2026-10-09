@@ -17,8 +17,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "azde-scripts": "^1.0.0",
-    "tfx-cli": "^0.23.1",
-    "typescript": "^5.7.2"
+    "azde-scripts": "^2.0.2",
+    "tfx-cli": "^0.24.2",
+    "typescript": "^7.0.2"
   }
 }

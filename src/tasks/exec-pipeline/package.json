@@ -21,7 +21,7 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^26.5.0",
+    "@types/node": "^26.6.4",
     "@types/q": "^1.5.5",
     "@vercel/ncc": "^0.45.0",
     "jest-fetch-mock": "^4.2.0",

@@ -30,7 +30,7 @@
       "label": "Azure Devops PAT",
       "visibleRule": "useSVC = true",
       "required": false,
-      "helpMarkDown": "Select the service connection for azure devops (if you want to use it)."
+      "helpMarkDown": "Select the service connection for azure devops (if you want to use it). The connection's Personal Access Token (PAT) needs the scope **Build (Read & execute)**."
     },
     {
       "name": "targetOrganization",

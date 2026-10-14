@@ -77,7 +77,7 @@
               {
                 "id": "apitoken",
                 "name": "PAT",
-                "description": "Personal Access Token (PAT) generated from Azure Devops",
+                "description": "Personal Access Token (PAT) generated from Azure Devops. Required scope: Build (Read & execute).",
                 "inputMode": "passwordbox",
                 "isConfidential": true,
                 "validation": {

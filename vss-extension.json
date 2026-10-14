@@ -33,12 +33,12 @@
     },
     {
       "id": "service-endpoint",
-      "description": "Service Endpoint type for Azure Devops PATH",
+      "description": "Service Endpoint type for Azure DevOps Personal Access Token (PAT)",
       "type": "ms.vss-endpoint.service-endpoint-type",
       "targets": ["ms.vss-endpoint.endpoint-types"],
       "properties": {
         "name": "execPipelineService",
-        "displayName": "Azure Devops Path (Exec Pipeline)",
+        "displayName": "Azure Devops PAT (Exec Pipeline)",
         "icon": "images/path.png",
         "url": {
           "displayName": "Server Url",
@@ -76,8 +76,8 @@
               },
               {
                 "id": "apitoken",
-                "name": "PATH",
-                "description": "PATH generated from Azure Devops",
+                "name": "PAT",
+                "description": "Personal Access Token (PAT) generated from Azure Devops. Required scope: Build (Read & execute).",
                 "inputMode": "passwordbox",
                 "isConfidential": true,
                 "validation": {

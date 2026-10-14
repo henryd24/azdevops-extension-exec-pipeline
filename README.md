@@ -12,7 +12,7 @@ This extension allows executing Azure DevOps pipelines from another pipeline and
 Search for the task called "Exec Pipeline" and the inputs are as follows:
 
 1. **Use Service Connection** (required): Indicates if a service connection will be used to consume the Azure DevOps API. If not, the pipeline execution token will be used.
-2. **Azure Devops Path** (optional): If you selected the option to use a service connection, you must select the service connection to be used. Otherwise, this field will not be displayed.
+2. **Azure Devops PAT** (optional): If you selected the option to use a service connection, you must select the service connection to be used. Otherwise, this field will not be displayed. See [Personal Access Token (PAT) scopes](#personal-access-token-pat-scopes).
 3. **Branch** (required): The branch with which the pipeline will be executed.
 4. **Pipeline Id** (required): The ID of the pipeline to be executed.
 5. **Execution Type** (required): The type of execution to be performed. If "Run" is selected, the pipeline will run immediately. If "Queue" is selected, the pipeline will be queued. Both options execute the pipeline, but "Queue" allows changing the Run Reason.
@@ -111,3 +111,13 @@ npm run pack
 # Bump version and package
 npm run packupversion
 ```
+
+## Personal Access Token (PAT) scopes
+
+The service connection asks for an Azure DevOps Personal Access Token (create one in Azure DevOps under *User settings → Personal access tokens → New Token*). Use **Custom defined** scopes and enable only:
+
+| Scope | Access | Why |
+| --- | --- | --- |
+| **Build** | **Read & execute** | Queue/run the pipeline, look up pipelines by name and read the status of the run. |
+
+The token must belong to a user with permission to queue builds on the target pipeline and project, and it must cover the organization set in the service connection. If you don't use a service connection, the pipeline's own token is used instead (`System.AccessToken`), and the project's Build Service identity needs permission to queue builds.

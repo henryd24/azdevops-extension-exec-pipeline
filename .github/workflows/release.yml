@@ -1,0 +1,68 @@
+name: Release
+
+# Builds the .vsix (public marketplace config), uploads it as an artifact,
+# and creates the tag + GitHub release for the version in config/release.json.
+# Bump the version in config/release.json and src/tasks/exec-pipeline/task.json,
+# then merge to main (or run it manually from the Actions tab).
+on:
+  push:
+    branches: [main]
+    paths:
+      - config/release.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Read version
+        id: version
+        run: |
+          EXT_VERSION=$(node -p "require('./config/release.json').version")
+          TASK_VERSION=$(node -p "const v=require('./src/tasks/exec-pipeline/task.json').version; v.Major+'.'+v.Minor+'.'+v.Patch")
+          if [ "$EXT_VERSION" != "$TASK_VERSION" ]; then
+            echo "::error::Version mismatch: config/release.json=$EXT_VERSION, task.json=$TASK_VERSION"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$EXT_VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$EXT_VERSION already exists. Bump the version first."
+            exit 1
+          fi
+          echo "version=$EXT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test task
+        working-directory: src/tasks/exec-pipeline
+        run: npm test
+
+      - name: Package extension
+        run: npm run pack
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix-${{ steps.version.outputs.version }}
+          path: "*.vsix"
+          if-no-files-found: error
+
+      - name: Create tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" *.vsix \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --generate-notes

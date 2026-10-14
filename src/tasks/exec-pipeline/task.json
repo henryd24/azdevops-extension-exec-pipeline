@@ -9,7 +9,7 @@
   "version": {
     "Major": 0,
     "Minor": 2,
-    "Patch": 0
+    "Patch": 1
   },
   "visibility": [
     "Build",
@@ -27,10 +27,10 @@
     {
       "name": "azureDevopsPath",
       "type": "connectedService:execPipelineService",
-      "label": "Azure Devops Path",
+      "label": "Azure Devops PAT",
       "visibleRule": "useSVC = true",
       "required": false,
-      "helpMarkDown": "Select the service connection for azure devops (if you want to use it)."
+      "helpMarkDown": "Select the service connection for azure devops (if you want to use it). The connection's Personal Access Token (PAT) needs the scope **Build (Read & execute)**."
     },
     {
       "name": "targetOrganization",

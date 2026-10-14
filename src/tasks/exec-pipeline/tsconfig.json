@@ -3,6 +3,8 @@
       "module": "CommonJS",
       "moduleResolution": "Node",
       "esModuleInterop": true,
+      "strict": false,
+      "ignoreDeprecations": "6.0",
       "target": "ES6",
       "removeComments": true,
       "rootDir": "./",

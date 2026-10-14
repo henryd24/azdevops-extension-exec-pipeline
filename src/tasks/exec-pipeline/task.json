@@ -27,7 +27,7 @@
     {
       "name": "azureDevopsPath",
       "type": "connectedService:execPipelineService",
-      "label": "Azure Devops Path",
+      "label": "Azure Devops PAT",
       "visibleRule": "useSVC = true",
       "required": false,
       "helpMarkDown": "Select the service connection for azure devops (if you want to use it)."

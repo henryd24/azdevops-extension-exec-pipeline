@@ -12,7 +12,7 @@ This extension allows executing Azure DevOps pipelines from another pipeline and
 Search for the task called "Exec Pipeline" and the inputs are as follows:
 
 1. **Use Service Connection** (required): Indicates if a service connection will be used to consume the Azure DevOps API. If not, the pipeline execution token will be used.
-2. **Azure Devops Path** (optional): If you selected the option to use a service connection, you must select the service connection to be used. Otherwise, this field will not be displayed.
+2. **Azure Devops PAT** (optional): If you selected the option to use a service connection, you must select the service connection to be used. Otherwise, this field will not be displayed.
 3. **Branch** (required): The branch with which the pipeline will be executed.
 4. **Pipeline Id** (required): The ID of the pipeline to be executed.
 5. **Execution Type** (required): The type of execution to be performed. If "Run" is selected, the pipeline will run immediately. If "Queue" is selected, the pipeline will be queued. Both options execute the pipeline, but "Queue" allows changing the Run Reason.

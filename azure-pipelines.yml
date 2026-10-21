@@ -64,12 +64,14 @@ stages:
     displayName: Validate on Azure Pipelines
     dependsOn: Build
     # Only for release PRs and manual runs. Fork builds get a restricted token, so skip there.
+    # GitHub PRs report System.PullRequest.SourceBranch without the refs/heads/ prefix (e.g. release/v1.2.3).
     condition: >-
       and(
         succeeded(),
         ne(variables['System.PullRequest.IsFork'], 'True'),
         or(
           eq(variables['Build.Reason'], 'Manual'),
+          startsWith(variables['System.PullRequest.SourceBranch'], 'release/'),
           startsWith(variables['System.PullRequest.SourceBranch'], 'refs/heads/release/')
         )
       )

@@ -129,3 +129,9 @@ The service connection asks for an Azure DevOps Personal Access Token (create on
 | **Build** | **Read & execute** | Queue/run the pipeline, look up pipelines by name and read the status of the run. |
 
 The token must belong to a user with permission to queue builds on the target pipeline and project, and it must cover the organization set in the service connection. If you don't use a service connection, the pipeline's own token is used instead (`System.AccessToken`), and the project's Build Service identity needs permission to queue builds.
+
+### Canceling the executed pipeline (`cancelOnAbort`)
+
+Canceling needs more than queueing. Some projects forbid `System.AccessToken` from acting on another run, and cancelling then fails with `HTTP 403: Cross-run use of System.AccessToken is not allowed in this project`. The task keeps working (it only logs a warning), but **the executed pipeline keeps running** after a cancel or a wait timeout.
+
+If you need `cancelOnAbort` in such a project, use a service connection or a Personal Access Token (scope **Build: Read & execute**) that is allowed to stop builds on the target pipeline instead of `System.AccessToken`.

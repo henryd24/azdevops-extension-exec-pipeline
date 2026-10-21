@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { resolveTarget, organizationFromUri } from "../utils/process_target";
 import { processParameters, readParametersFile } from "../utils/process_parameters";
-import { resolvePipelineId, cancelRun } from "../utils/api_pipeline_lookup";
+import { resolvePipelineId, cancelRun, cancelFailureHint } from "../utils/api_pipeline_lookup";
 import { apiRequest, HttpError } from "../utils/api_client";
 import { formatDuration } from "../utils/process_check_pipeline_status";
 
@@ -185,6 +185,21 @@ describe("cancelRun / formatDuration", () => {
     expect(f.mock.calls[0][0]).toContain("/builds/42");
     expect(f.mock.calls[0][1].method).toBe("PATCH");
     expect(f.mock.calls[0][1].body).toBe('{"status":"cancelling"}');
+  });
+
+  it("explains why cancelling failed with System.AccessToken", () => {
+    const hint = cancelFailureHint(new HttpError(403, "Forbidden", "Cross-run use of System.AccessToken is not allowed in this project"), true);
+    expect(hint).toMatch(/System.AccessToken may not be allowed to cancel other runs/);
+    expect(hint).toMatch(/service connection or a personal access token/);
+  });
+
+  it("explains why cancelling failed with a PAT or service connection", () => {
+    expect(cancelFailureHint(new HttpError(403, "Forbidden"), false)).toMatch(/permission to stop builds/);
+  });
+
+  it("adds no hint for other errors", () => {
+    expect(cancelFailureHint(new HttpError(500, "boom"), true)).toBe("");
+    expect(cancelFailureHint(new Error("network"), true)).toBe("");
   });
 
   it("formats durations", () => {

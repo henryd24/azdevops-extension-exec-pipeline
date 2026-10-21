@@ -9,7 +9,7 @@ import {
 } from "./utils/process_check_pipeline_status";
 import { parseNumberInput, normalizeBranch } from "./utils/process_options";
 import { resolveTarget } from "./utils/process_target";
-import { cancelRun, resolvePipelineId } from "./utils/api_pipeline_lookup";
+import { cancelFailureHint, cancelRun, resolvePipelineId } from "./utils/api_pipeline_lookup";
 
 /**
  * Runs the Exec Pipeline Task.
@@ -124,7 +124,7 @@ async function run() {
     try {
       await cancelRun(url, returnedData.id, token, isBearer);
     } catch (e) {
-      tl.warning(`Could not cancel pipeline run ${returnedData.id}: ${e}`);
+      tl.warning(`Could not cancel pipeline run ${returnedData.id}: ${e}${cancelFailureHint(e, isBearer)}`);
     }
   };
   if (cancelOnAbort) {

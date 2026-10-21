@@ -1,4 +1,4 @@
-import { apiRequest } from "./api_client";
+import { apiRequest, HttpError } from "./api_client";
 
 interface Definition {
   id: number;
@@ -62,4 +62,19 @@ export async function cancelRun(
     isBearer,
     { method: "PATCH", body: { status: "cancelling" } }
   );
+}
+
+/**
+ * Actionable suggestion to append to the warning shown when cancelling a run fails.
+ * Cancelling needs more than queueing: some projects forbid System.AccessToken from acting on another
+ * run (HTTP 403 "Cross-run use of System.AccessToken is not allowed in this project").
+ */
+export function cancelFailureHint(error: unknown, isBearer: boolean): string {
+  if (!(error instanceof HttpError) || (error.status !== 401 && error.status !== 403)) {
+    return "";
+  }
+  return isBearer
+    ? " The run keeps going. System.AccessToken may not be allowed to cancel other runs (some projects block cross-run use of the token): " +
+        "to use cancelOnAbort there, run the task with a service connection or a personal access token (Build: Read & execute) that can stop builds on the target pipeline."
+    : " The run keeps going. The service connection / personal access token needs permission to stop builds on the target pipeline.";
 }

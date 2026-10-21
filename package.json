@@ -16,7 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "azde-scripts": "^2.0.2",
     "tfx-cli": "^0.24.2",
     "typescript": "^7.0.2"

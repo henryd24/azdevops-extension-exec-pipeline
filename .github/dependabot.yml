@@ -1,7 +1,11 @@
 version: 2
 updates:
   # The cooldown skips versions published less than N days ago, which is the window
-  # in which most compromised npm packages are detected and removed.
+  # in which most compromised npm packages are detected and removed (security updates ignore it).
+  #
+  # Groups are per directory: each npm project gets at most one pull request for security fixes and
+  # one for minor/patch updates. Major updates arrive as separate pull requests so a breaking
+  # major cannot block the rest.
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -10,10 +14,13 @@ updates:
       default-days: 7
       semver-major-days: 30
     groups:
-      dev-dependencies:
-        dependency-type: development
-      production-dependencies:
-        dependency-type: production
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      all-dependencies:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     open-pull-requests-limit: 5
 
   - package-ecosystem: npm
@@ -24,10 +31,13 @@ updates:
       default-days: 7
       semver-major-days: 30
     groups:
-      dev-dependencies:
-        dependency-type: development
-      production-dependencies:
-        dependency-type: production
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      all-dependencies:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     open-pull-requests-limit: 5
 
   # Keeps the SHA-pinned actions up to date.

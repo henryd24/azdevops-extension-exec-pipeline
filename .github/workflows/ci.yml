@@ -1,0 +1,37 @@
+name: CI
+
+# Security notes:
+# - Uses `pull_request` (never `pull_request_target`): PRs from forks run with a
+#   read-only token and without access to repository secrets.
+# - This workflow must not use secrets. Publishing belongs in the Release workflow.
+# - Third-party actions are pinned to a full commit SHA (a tag can be moved).
+# - Dependencies are installed with --ignore-scripts so no package can run install hooks.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Installs, verifies signatures, typechecks, tests, bundles and packages the .vsix.
+      - uses: ./.github/actions/build-vsix
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=critical
+        working-directory: src/tasks/exec-pipeline

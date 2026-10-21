@@ -29,3 +29,14 @@ updates:
       production-dependencies:
         dependency-type: production
     open-pull-requests-limit: 5
+
+  # Keeps the SHA-pinned actions up to date.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

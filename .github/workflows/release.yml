@@ -1,68 +1,138 @@
 name: Release
 
-# Builds the .vsix (public marketplace config), uploads it as an artifact,
-# and creates the tag + GitHub release for the version in config/release.json.
-# Bump the version in config/release.json and src/tasks/exec-pipeline/task.json,
-# then merge to main (or run it manually from the Actions tab).
+# Two-step release that respects the protection on `main` (PR with 1 approval required):
+#
+#   1. Run this workflow manually from `main` and pick the semver bump. It bumps the
+#      version in config/release.json and src/tasks/exec-pipeline/task.json, verifies the result (typecheck,
+#      tests, build, packaging) and opens a "release vX.Y.Z" pull request.
+#   2. Merge that pull request. The push to `main` creates the tag and the GitHub Release
+#      with the .vsix attached.
+#
+# Security notes:
+# - No secrets: only the workflow's GITHUB_TOKEN is used, with write access scoped per job.
+# - The bump commit is created through the GitHub API, so GitHub signs it ("Verified").
+# - Pull requests opened with GITHUB_TOKEN do not trigger other workflows; the prepare job
+#   runs the full checks itself before opening the PR.
+# - Requires Settings > Actions > General > "Allow GitHub Actions to create and approve
+#   pull requests".
+# - Dependencies are installed with --ignore-scripts; third-party actions are SHA-pinned.
+
 on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semver increment for the new version
+        type: choice
+        options: [patch, minor, major]
+        default: patch
   push:
     branches: [main]
-    paths:
-      - config/release.json
-  workflow_dispatch:
+    paths: [config/release.json]
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  prepare:
+    name: Prepare release PR
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 20
-          cache: npm
+          persist-credentials: false
 
-      - name: Read version
-        id: version
+      - name: Bump version
+        id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: echo "version=$(node .github/scripts/bump-version.mjs "$BUMP")" >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/build-vsix
+
+      - name: Open release pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+          BUMP: ${{ inputs.bump }}
         run: |
-          EXT_VERSION=$(node -p "require('./config/release.json').version")
-          TASK_VERSION=$(node -p "const v=require('./src/tasks/exec-pipeline/task.json').version; v.Major+'.'+v.Minor+'.'+v.Patch")
-          if [ "$EXT_VERSION" != "$TASK_VERSION" ]; then
-            echo "::error::Version mismatch: config/release.json=$EXT_VERSION, task.json=$TASK_VERSION"
+          branch="release/v$VERSION"
+          base=$(git rev-parse HEAD)
+
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$branch" >/dev/null 2>&1; then
+            echo "::error::Branch $branch already exists. Close the open release PR or delete the branch first."
             exit 1
           fi
-          if git ls-remote --exit-code --tags origin "refs/tags/v$EXT_VERSION" >/dev/null 2>&1; then
-            echo "::error::Tag v$EXT_VERSION already exists. Bump the version first."
-            exit 1
-          fi
-          echo "version=$EXT_VERSION" >> "$GITHUB_OUTPUT"
+          gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/heads/$branch" -f sha="$base" >/dev/null
 
-      - name: Install dependencies
-        run: npm ci
+          # createCommitOnBranch makes a commit that GitHub signs itself.
+          jq -n \
+            --arg repo "$GITHUB_REPOSITORY" --arg branch "$branch" --arg base "$base" \
+            --arg headline "chore(release): v$VERSION" \
+            --arg release "$(base64 -w0 config/release.json)" \
+            --arg task "$(base64 -w0 src/tasks/exec-pipeline/task.json)" \
+            '{query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { url } } }",
+              variables: {input: {
+                branch: {repositoryNameWithOwner: $repo, branchName: $branch},
+                message: {headline: $headline},
+                expectedHeadOid: $base,
+                fileChanges: {additions: [
+                  {path: "config/release.json", contents: $release},
+                  {path: "src/tasks/exec-pipeline/task.json", contents: $task}
+                ]}}}}' | gh api graphql --input - >/dev/null
 
-      - name: Test task
-        working-directory: src/tasks/exec-pipeline
-        run: npm test
+          gh pr create --base main --head "$branch" \
+            --title "chore(release): v$VERSION" \
+            --body "Version bump ($BUMP) to **v$VERSION**, generated by the Release workflow. Typecheck, tests, build and packaging passed on this version.
 
-      - name: Package extension
-        run: npm run pack
+          Merging this pull request creates the \`v$VERSION\` tag and the GitHub Release with the .vsix attached."
 
-      - name: Upload .vsix artifact
-        uses: actions/upload-artifact@v4
+  release:
+    name: Tag and publish
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: vsix-${{ steps.version.outputs.version }}
-          path: "*.vsix"
-          if-no-files-found: error
+          persist-credentials: false
 
-      - name: Create tag and release
+      - name: Read and validate version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_version=$(node -p "require('./config/release.json').version")
+          task_version=$(node -p "const v=require('./src/tasks/exec-pipeline/task.json').version; v.Major+'.'+v.Minor+'.'+v.Patch")
+          echo "release.json=$release_version task.json=$task_version"
+          if [ "$release_version" != "$task_version" ]; then
+            echo "::error::config/release.json ($release_version) and src/tasks/exec-pipeline/task.json ($task_version) versions differ"
+            exit 1
+          fi
+          if gh release view "v$release_version" >/dev/null 2>&1; then
+            echo "Release v$release_version already exists; nothing to do."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$release_version" >> "$GITHUB_OUTPUT"
+
+      - if: steps.version.outputs.publish == 'true'
+        uses: ./.github/actions/build-vsix
+
+      - name: Create tag and GitHub Release
+        if: steps.version.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          gh release create "v$VERSION" *.vsix \
-            --target "$GITHUB_SHA" \
-            --title "v$VERSION" \
-            --generate-notes
+        run: gh release create "v$VERSION" out/*.vsix --title "v$VERSION" --generate-notes --target "$GITHUB_SHA"

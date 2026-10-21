@@ -1,0 +1,178 @@
+# End-to-end validation of the Exec Pipeline task on a real Azure Pipelines agent.
+#
+# The task is bundled exactly as the extension packages it (ncc) and executed with
+# scripts/e2e/run-task.js, which feeds it the inputs the way an agent does. The task runs the target
+# pipeline (azure-pipelines/e2e-target.yml, registered as `exec-pipeline-e2e-target`) through the
+# Run and Queue APIs, authenticating with the pipeline's own System.AccessToken, and every outcome
+# is verified independently through the Builds API (scripts/e2e/azdo.js). No secrets are used.
+#
+# Build runs on every PR (it is a required status check on `main`); the E2E stage only runs for
+# release pull requests (branch release/*, opened by the Release workflow) and for manual runs.
+# Both use the self-hosted pool to save Microsoft-hosted minutes; only the target pipeline runs on a
+# Microsoft-hosted agent, because the self-hosted pool has a single parallel job that the E2E job
+# itself occupies while it waits.
+
+trigger: none
+pr:
+  branches:
+    include: [main]
+
+variables:
+  - name: NODE_VERSION
+    value: 24.x
+  - name: TARGET_PIPELINE
+    value: exec-pipeline-e2e-target
+
+stages:
+  - stage: Build
+    displayName: Build
+    jobs:
+      - job: build
+        displayName: Test and bundle the task
+        pool:
+          name: HenDa24
+          demands: Agent.OS -equals Linux
+        workspace:
+          clean: all
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: $(NODE_VERSION)
+              # Self-hosted agents cache old builds of a major; ncc needs >= 20.12 (crypto.hash).
+              checkLatest: true
+          - script: npm ci --ignore-scripts --no-audit --no-fund
+            displayName: Install packaging tools
+          - script: npm ci --ignore-scripts --no-audit --no-fund
+            workingDirectory: src/tasks/exec-pipeline
+            displayName: Install task dependencies
+          - script: npx --no-install tsc --noEmit -p tsconfig.json
+            workingDirectory: src/tasks/exec-pipeline
+            displayName: Typecheck
+          - script: npm test
+            workingDirectory: src/tasks/exec-pipeline
+            displayName: Unit tests
+          - script: npm run package:tasks
+            displayName: Bundle task (ncc)
+          - publish: tasks/exec-pipeline
+            artifact: task
+            displayName: Publish bundled task
+
+  - stage: E2E
+    displayName: Validate on Azure Pipelines
+    dependsOn: Build
+    # Only for release PRs and manual runs. Fork builds get a restricted token, so skip there.
+    condition: >-
+      and(
+        succeeded(),
+        ne(variables['System.PullRequest.IsFork'], 'True'),
+        or(
+          eq(variables['Build.Reason'], 'Manual'),
+          startsWith(variables['System.PullRequest.SourceBranch'], 'refs/heads/release/')
+        )
+      )
+    jobs:
+      - job: e2e
+        displayName: E2E on
+        timeoutInMinutes: 40
+        strategy:
+          matrix:
+            linux_node20:
+              nodeVersion: 20.x
+              jobKey: linux20
+            linux_node24:
+              nodeVersion: 24.x
+              jobKey: linux24
+        pool:
+          name: HenDa24
+          demands: Agent.OS -equals Linux
+        workspace:
+          clean: all
+        variables:
+          TASK_DIR: $(Pipeline.Workspace)/task
+        steps:
+          - checkout: self
+          - task: UseNode@1
+            inputs:
+              version: $(nodeVersion)
+              checkLatest: true
+          - download: current
+            artifact: task
+
+          # Branch of the target pipeline's YAML: the PR source branch (or the branch being run).
+          - bash: echo "##vso[task.setvariable variable=targetBranch]${SYSTEM_PULLREQUEST_SOURCEBRANCH:-$BUILD_SOURCEBRANCH}"
+            displayName: Compute target branch
+
+          # --- Run API + template parameters, waiting for the result
+          - script: node scripts/e2e/run-task.js execType=run onlyExecution=false pollIntervalSeconds=5 pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch) isParameter=true "parameters={'message':'run-$(jobKey)','sleepSeconds':'5'}"
+            name: runparams
+            displayName: Run API with parameters (wait)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - script: node scripts/e2e/expect.js "echo $(runparams.runResult)" "succeeded"
+            displayName: runResult = succeeded
+          - script: node scripts/e2e/azdo.js build $(runparams.runId) --status completed --result succeeded --param message=run-$(jobKey)
+            displayName: The run received the parameter (API)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          # --- Queue API + variables settable at queue time, waiting for the result
+          - script: node scripts/e2e/run-task.js execType=queue reason=manual onlyExecution=false pollIntervalSeconds=5 pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch) "parameters={'marker':'queue-$(jobKey)'}"
+            name: queuevars
+            displayName: Queue API with variables (wait)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - script: node scripts/e2e/expect.js "echo $(queuevars.runResult)" "succeeded"
+            displayName: runResult = succeeded
+          - script: node scripts/e2e/azdo.js build $(queuevars.runId) --status completed --result succeeded --var marker=queue-$(jobKey)
+            displayName: The build received the variable (API)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          # --- A failing target pipeline must fail the task
+          - script: node scripts/e2e/run-task.js --expect-failure execType=queue onlyExecution=false pollIntervalSeconds=5 pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch) isParameter=true "parameters={'shouldFail':'true','sleepSeconds':'1'}"
+            name: failing
+            displayName: Failing pipeline fails the task
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - script: node scripts/e2e/expect.js "echo $(failing.runResult)" "failed"
+            displayName: runResult = failed
+          - script: node scripts/e2e/azdo.js build $(failing.runId) --status completed --result failed
+            displayName: The target pipeline failed (API)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          # --- Fire and forget (default): returns at once with the run id, the run completes later
+          - script: node scripts/e2e/run-task.js execType=run pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch) "parameters={'marker':'forget-$(jobKey)'}"
+            name: forget
+            displayName: Run API with variables (do not wait)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - script: node scripts/e2e/expect.js "echo $(forget.runUrl)" "_build/results?buildId=$(forget.runId)"
+            displayName: runId and runUrl are set
+          - script: node scripts/e2e/azdo.js wait $(forget.runId) --timeout 240 --result succeeded --var marker=forget-$(jobKey)
+            displayName: The run completes with the variable (API)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          # --- Timeout cancels the target pipeline when cancelOnAbort is set
+          - script: node scripts/e2e/run-task.js --expect-failure execType=run onlyExecution=false timeoutMinutes=1 pollIntervalSeconds=5 cancelOnAbort=true pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch) isParameter=true "parameters={'sleepSeconds':'300'}"
+            name: timeout
+            displayName: Wait timeout fails the task and cancels the run
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - script: node scripts/e2e/expect.js "echo $(timeout.runResult)" "timeout"
+            displayName: runResult = timeout
+          - script: node scripts/e2e/azdo.js wait $(timeout.runId) --timeout 180 --result canceled
+            displayName: The target pipeline was canceled (API)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          # --- Configuration errors must fail before anything is started
+          - script: node scripts/e2e/run-task.js --expect-failure pipelineName=this-pipeline-does-not-exist-e2e branch=$(targetBranch)
+            displayName: Unknown pipeline name fails the task
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - script: node scripts/e2e/run-task.js --expect-failure targetOrganization=not-this-organization-e2e pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch)
+            displayName: Another organization without a PAT fails the task
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)

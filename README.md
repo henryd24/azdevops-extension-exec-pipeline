@@ -112,6 +112,14 @@ npm run pack
 npm run packupversion
 ```
 
+# Release
+
+Releases are automated with GitHub Actions and validated on Azure Pipelines:
+
+1. Run the **Release** workflow from `main` (Actions → Release → Run workflow) and choose `patch`, `minor` or `major`. It bumps the version in `config/release.json` and `src/tasks/exec-pipeline/task.json`, runs the checks and opens a `chore(release): vX.Y.Z` pull request.
+2. The pull request runs the Azure Pipelines check, which executes the bundled task against a real pipeline (Run and Queue APIs, wait, failure, timeout and cancellation, configuration errors).
+3. Merging it creates the `vX.Y.Z` tag and a GitHub Release with the `.vsix` attached.
+
 ## Personal Access Token (PAT) scopes
 
 The service connection asks for an Azure DevOps Personal Access Token (create one in Azure DevOps under *User settings → Personal access tokens → New Token*). Use **Custom defined** scopes and enable only:

@@ -1,0 +1,40 @@
+# Target of the E2E scenarios in /azure-pipelines.yml: a trivial pipeline that the Exec Pipeline task
+# starts, waits for, cancels, etc. It is never triggered by pushes or pull requests.
+#
+# It runs on a Microsoft-hosted agent on purpose: the E2E job occupies the only self-hosted parallel
+# job while it waits for this pipeline, so this one needs a different pool to be able to start.
+#
+# Setup (once): create a pipeline named `exec-pipeline-e2e-target` from this file and mark the
+# variable `marker` as "Settable at queue time" (az pipelines variable create --allow-override true).
+trigger: none
+pr: none
+
+parameters:
+  - name: shouldFail
+    type: boolean
+    default: false
+  - name: sleepSeconds
+    type: number
+    default: 5
+  - name: message
+    type: string
+    default: hello
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - bash: |
+      echo "message=$MESSAGE marker=$MARKER"
+      sleep "$SLEEP_SECONDS"
+    displayName: Echo and wait
+    env:
+      MESSAGE: ${{ parameters.message }}
+      MARKER: $(marker)
+      SLEEP_SECONDS: ${{ parameters.sleepSeconds }}
+
+  - ${{ if eq(parameters.shouldFail, true) }}:
+      - bash: |
+          echo "Failing on purpose"
+          exit 1
+        displayName: Fail on purpose

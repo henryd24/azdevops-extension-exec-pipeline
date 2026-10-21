@@ -6,6 +6,9 @@
 # Run and Queue APIs, authenticating with the pipeline's own System.AccessToken, and every outcome
 # is verified independently through the Builds API (scripts/e2e/azdo.js). No secrets are used.
 #
+# Every scenario starts a run of the target pipeline on a Microsoft-hosted agent (billed minutes), so
+# keep the scenario list short and the target pipeline fast.
+#
 # Build runs on every PR (it is a required status check on `main`); the E2E stage only runs for
 # release pull requests (branch release/*, opened by the Release workflow) and for manual runs.
 # Both use the self-hosted pool to save Microsoft-hosted minutes; only the target pipeline runs on a
@@ -72,16 +75,8 @@ stages:
       )
     jobs:
       - job: e2e
-        displayName: E2E on
-        timeoutInMinutes: 40
-        strategy:
-          matrix:
-            linux_node20:
-              nodeVersion: 20.x
-              jobKey: linux20
-            linux_node24:
-              nodeVersion: 24.x
-              jobKey: linux24
+        displayName: E2E on Linux (Node 24)
+        timeoutInMinutes: 20
         pool:
           name: HenDa24
           demands: Agent.OS -equals Linux
@@ -89,6 +84,8 @@ stages:
           clean: all
         variables:
           TASK_DIR: $(Pipeline.Workspace)/task
+          nodeVersion: 24.x
+          jobKey: linux24
         steps:
           - checkout: self
           - task: UseNode@1
@@ -154,18 +151,9 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-          # --- Timeout cancels the target pipeline when cancelOnAbort is set
-          - script: node scripts/e2e/run-task.js --expect-failure execType=run onlyExecution=false timeoutMinutes=1 pollIntervalSeconds=5 cancelOnAbort=true pipelineName=$(TARGET_PIPELINE) branch=$(targetBranch) isParameter=true "parameters={'sleepSeconds':'300'}"
-            name: timeout
-            displayName: Wait timeout fails the task and cancels the run
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-          - script: node scripts/e2e/expect.js "echo $(timeout.runResult)" "timeout"
-            displayName: runResult = timeout
-          - script: node scripts/e2e/azdo.js wait $(timeout.runId) --timeout 180 --result canceled
-            displayName: The target pipeline was canceled (API)
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          # Not covered here: timeout + cancelOnAbort. Cancelling another run needs a token that is allowed to
+          # do it, and this project blocks cross-run use of System.AccessToken (HTTP 403), so the target
+          # pipeline would keep sleeping on a Microsoft-hosted agent. The unit tests cover that logic.
 
           # --- Configuration errors must fail before anything is started
           - script: node scripts/e2e/run-task.js --expect-failure pipelineName=this-pipeline-does-not-exist-e2e branch=$(targetBranch)

@@ -24,6 +24,9 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+  # No source needed: skipping the checkout keeps the Microsoft-hosted run short.
+  - checkout: none
+
   - bash: |
       echo "message=$MESSAGE marker=$MARKER"
       sleep "$SLEEP_SECONDS"

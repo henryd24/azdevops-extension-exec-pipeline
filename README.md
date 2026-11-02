@@ -118,7 +118,9 @@ Releases are automated with GitHub Actions and validated on Azure Pipelines:
 
 1. Run the **Release** workflow from `main` (Actions → Release → Run workflow) and choose `patch`, `minor` or `major`. It bumps the version in `config/release.json` and `src/tasks/exec-pipeline/task.json`, runs the checks and opens a `chore(release): vX.Y.Z` pull request.
 2. The pull request runs the Azure Pipelines check, which executes the bundled task against a real pipeline (Run and Queue APIs, wait, failure, timeout and cancellation, configuration errors).
-3. Merging it creates the `vX.Y.Z` tag and a GitHub Release with the `.vsix` attached.
+3. Merging it creates the `vX.Y.Z` tag and a GitHub Release with the `.vsix` attached, and then publishes that same `.vsix` to the Visual Studio Marketplace.
+
+Marketplace publishing uses [Trusted Publishing](https://learn.microsoft.com/azure/devops/extend/publish/overview#publish-with-oidc-trusted-publishing) (OIDC), so no PAT is stored. It requires a Trusted Publishing policy on the `hendamm` publisher pointing to this repository and the `release.yml` workflow (no environment).
 
 ## Personal Access Token (PAT) scopes
 

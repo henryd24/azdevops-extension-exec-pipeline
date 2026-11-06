@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "azde-scripts install src/tasks",
-    "build": "azde-scripts build src/tasks",
+    "postinstall": "npm ci --prefix src/tasks/exec-pipeline",
+    "build": "npm run build --prefix src/tasks/exec-pipeline",
     "package:tasks": "cd src/tasks/exec-pipeline && npm run package",
     "pack": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/release.json",
     "packupversion": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
@@ -17,16 +17,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "azde-scripts": "^2.0.2",
     "tfx-cli": "^0.24.2",
     "typescript": "^7.0.2"
-  },
-  "overrides": {
-    "simple-git": "^4.0.1",
-    "@simple-git/argv-parser": "^2.0.1",
-    "tar": "^7.5.20",
-    "uuid": "^13.0.1",
-    "@tootallnate/once": "^2.0.1",
-    "qs": "^6.16.1"
   }
 }

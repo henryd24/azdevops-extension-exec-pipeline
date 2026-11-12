@@ -25,4 +25,4 @@ token or PAT in an issue or log; if you believe one was leaked, revoke it in Azu
 - Every action is pinned to a full commit SHA, and `scripts/check-workflows.js` enforces these rules in CI.
 - Dependencies are installed from the lockfile with `--ignore-scripts`, and their registry signatures are verified.
 - Dependabot waits 7 days (30 for majors) before proposing a new version.
-- CodeQL analyzes the code on every pull request and weekly.
+- CodeQL analyzes the code and the workflows on every pull request and weekly.

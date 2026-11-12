@@ -9,7 +9,7 @@
 # Every scenario starts a run of the target pipeline on a Microsoft-hosted agent (billed minutes), so
 # keep the scenario list short and the target pipeline fast.
 #
-# Build runs on every PR (it is a required status check on `main`); the E2E stage only runs for
+# Build runs on every PR (it is a required status check on `trunk`); the E2E stage only runs for
 # release pull requests (branch release/*, opened by the Release workflow) and for manual runs.
 # Both use the self-hosted pool to save Microsoft-hosted minutes; only the target pipeline runs on a
 # Microsoft-hosted agent, because the self-hosted pool has a single parallel job that the E2E job
@@ -18,7 +18,7 @@
 trigger: none
 pr:
   branches:
-    include: [main]
+    include: [trunk]
 
 variables:
   - name: NODE_VERSION

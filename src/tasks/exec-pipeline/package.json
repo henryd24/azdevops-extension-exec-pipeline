@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.build.json",
     "test-local": "export $(grep -v '^#' .env | xargs -0); bun src/exec_pipeline.ts",
     "configure": "cp -r task.json icon.png ../../../tasks/exec-pipeline",
-    "package": "ncc build src/exec_pipeline.ts -o ../../../tasks/exec-pipeline && npm run configure"
+    "package": "npm run build && ncc build dist/src/exec_pipeline.js -o ../../../tasks/exec-pipeline && npm run configure",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "keywords": [],
   "author": "",
@@ -19,14 +20,16 @@
     "azure-pipelines-task-lib": "^5.282.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-typescript": "^7.29.0",
     "@types/jest": "^30.0.0",
-    "@types/mocha": "^10.0.1",
     "@types/node": "^26.6.6",
     "@types/q": "^1.5.5",
     "@vercel/ncc": "^0.45.0",
+    "babel-jest": "^30.5.2",
     "jest": "^30.5.2",
     "jest-fetch-mock": "^4.2.0",
-    "ts-jest": "^29.4.15",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "typescript": "^7.0.2"
   }
 }

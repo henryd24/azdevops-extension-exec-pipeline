@@ -11,13 +11,16 @@
     "packupversion": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/release.json",
     "pack:dev": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --overrides-file config/dev.json",
     "packupversion:dev": "npm run package:tasks && tfx extension create --manifest-globs vss-extension.json --rev-version --overrides-file config/dev.json",
-    "clean:tasks": "rm -rf tasks"
+    "clean:tasks": "rm -rf tasks",
+    "check:workflows": "node scripts/check-workflows.js",
+    "typecheck": "npm run typecheck --prefix src/tasks/exec-pipeline",
+    "test": "npm test --prefix src/tasks/exec-pipeline && node scripts/check-workflows.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "tfx-cli": "^0.24.2",
-    "typescript": "^7.0.2"
+    "js-yaml": "^5.5.0"
   }
 }

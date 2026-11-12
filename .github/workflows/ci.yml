@@ -7,11 +7,25 @@ name: CI
 # - Third-party actions are pinned to a full commit SHA (a tag can be moved).
 # - Dependencies are installed with --ignore-scripts so no package can run install hooks.
 
+# Changes that do not affect the code (documentation, markdown, license, images) do not run CI.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "images/**"
+      - "LICENSE"
+      - ".gitignore"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "images/**"
+      - "LICENSE"
+      - ".gitignore"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -35,3 +49,13 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=critical
         working-directory: src/tasks/exec-pipeline
+
+      - name: Check workflow security rules
+        run: node scripts/check-workflows.js
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vsix
+          path: out/*.vsix
+          if-no-files-found: error
+          retention-days: 14
